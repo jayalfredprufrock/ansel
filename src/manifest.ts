@@ -57,8 +57,8 @@ export interface ImageFile {
 
 export interface FolderScan {
   images: ImageFile[];
-  /** Files that look like images but can't be used, with the reason. */
-  invalid: { file: string; reason: string }[];
+  /** Files that look like images but can't be used, with the reason and a valid name if any. */
+  invalid: { file: string; reason: string; suggestion?: string }[];
 }
 
 /** Finds the image files in `dir` (recursively) and derives their names. */
@@ -84,9 +84,11 @@ export async function scanImages(dir: string): Promise<FolderScan> {
 
     const name = file.slice(0, dot);
     if (!name.split("/").every((segment) => NAME_SEGMENT.test(segment))) {
+      const suggestion = suggestName(name);
       invalid.push({
         file,
-        reason: `use lowercase letters, digits and dashes, e.g. "${suggestName(name)}${extension}"`,
+        reason: `use lowercase letters, digits and dashes, e.g. "${suggestion}${extension}"`,
+        suggestion,
       });
       continue;
     }
@@ -100,6 +102,15 @@ export async function scanImages(dir: string): Promise<FolderScan> {
   }
   images.sort((a, b) => a.name.localeCompare(b.name));
   return { images, invalid };
+}
+
+/** Camera, phone and stock-site default names, and names that are mostly a long number. */
+const POOR_NAME =
+  /^(img|dsc[nf]?|pxl|mvimg|gopr|dji|screenshot|screen-shot|untitled|image|photo|pexels-photo|pexels|unsplash|shutterstock|adobestock|istock|istockphoto|gettyimages|depositphotos)(-|$)|\d{5,}|^\d+$/;
+
+/** Whether a valid image name's last segment is a camera or stock default (`team/img-4821`). */
+export function isPoorName(name: string): boolean {
+  return POOR_NAME.test(name.split("/").pop() ?? name);
 }
 
 /** A valid name close to `name`: `Dr Patel (Portrait)` → `dr-patel-portrait`. */

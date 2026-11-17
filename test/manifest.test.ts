@@ -3,7 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
-import { analyzeImage, scanImages, suggestName, syncManifest } from "../src/manifest.ts";
+import {
+  analyzeImage,
+  isPoorName,
+  scanImages,
+  suggestName,
+  syncManifest,
+} from "../src/manifest.ts";
 
 let dir: string;
 
@@ -50,7 +56,9 @@ describe("scanImages", () => {
     const { images, invalid } = await scanImages(dir);
     expect(images.map((i) => i.name)).toEqual(["office", "team/dr-patel"]);
     expect(invalid.map((i) => i.file).sort()).toEqual(["IMG 4821.JPG", "office.webp"]);
-    expect(invalid.find((i) => i.file === "IMG 4821.JPG")?.reason).toContain('"img-4821.jpg"');
+    const camera = invalid.find((i) => i.file === "IMG 4821.JPG");
+    expect(camera?.reason).toContain('"img-4821.jpg"');
+    expect(camera?.suggestion).toBe("img-4821");
   });
   it("treats a missing folder as empty", async () => {
     expect(await scanImages(join(dir, "missing"))).toEqual({ images: [], invalid: [] });
@@ -60,6 +68,21 @@ describe("scanImages", () => {
 describe("suggestName", () => {
   it("normalizes to lowercase, digits and dashes", () => {
     expect(suggestName("Team/Dr. Zoë Patel (Portrait)")).toBe("team/dr-zoe-patel-portrait");
+  });
+});
+
+describe("isPoorName", () => {
+  it("flags camera, stock and number-only names in the last segment", () => {
+    for (const name of [
+      "team/img-4821",
+      "dsc01234",
+      "pexels-photo-1234",
+      "team/20240512",
+      "x/unsplash",
+    ])
+      expect(isPoorName(name), name).toBe(true);
+    for (const name of ["team/dr-patel", "img/waiting-room", "office/front-desk-2"])
+      expect(isPoorName(name), name).toBe(false);
   });
 });
 

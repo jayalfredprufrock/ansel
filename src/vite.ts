@@ -7,6 +7,7 @@ import {
   ENTRIES_FILE,
   MANIFEST_FILE,
   TYPES_FILE,
+  isPoorName,
   readManifest,
   serializeManifest,
   syncManifest,
@@ -43,9 +44,8 @@ export interface AnselOptions {
   maxPixels?: number;
 }
 
-/** Camera, phone and stock-site default names, and names that are mostly a long number. */
-const POOR_NAME =
-  /^(img|dsc[nf]?|pxl|mvimg|gopr|dji|screenshot|screen-shot|untitled|image|photo|pexels-photo|pexels|unsplash|shutterstock|adobestock|istock|istockphoto|gettyimages|depositphotos)(-|$)|\d{5,}|^\d+$/;
+const POOR_NAME_PROBLEM =
+  'the name doesn\'t say what the image shows; rename it in lowercase letters, digits and dashes, e.g. "team/dr-patel.jpg"';
 
 interface State {
   manifest: Manifest;
@@ -76,7 +76,11 @@ export function ansel(options: AnselOptions = {}): Plugin {
     const problems: string[] = [];
     const result = await syncManifest(dir, await readManifest(dir));
     const { manifest } = result;
-    for (const { file, reason } of result.invalid) problems.push(`${file}: ${reason}`);
+    for (const { file, reason, suggestion } of result.invalid) {
+      // Don't suggest a fixed-up camera name that `rejectPoorNames` would reject next.
+      const poor = options.rejectPoorNames && suggestion !== undefined && isPoorName(suggestion);
+      problems.push(`${file}: ${poor ? POOR_NAME_PROBLEM : reason}`);
+    }
 
     const entries = await loadEntries();
     const manifestPath = join(dir, MANIFEST_FILE);
@@ -141,11 +145,8 @@ export function ansel(options: AnselOptions = {}): Plugin {
 
   function checkImage(name: string, data: ManifestEntry): string[] {
     const problems: string[] = [];
-    const base = name.split("/").pop() ?? name;
-    if (options.rejectPoorNames && POOR_NAME.test(base)) {
-      problems.push(
-        `${data.file}: the name doesn't say what the image shows; rename it, e.g. "team/dr-patel"`,
-      );
+    if (options.rejectPoorNames && isPoorName(name)) {
+      problems.push(`${data.file}: ${POOR_NAME_PROBLEM}`);
     }
     if (options.rejectGps && data.gps) {
       problems.push(`${data.file}: contains GPS location data; strip it before adding the image`);
