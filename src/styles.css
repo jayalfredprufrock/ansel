@@ -1,0 +1,34 @@
+/*
+ * Styles for <Img>, in `@layer ansel` so unlayered site styles always win. The placeholder sits
+ * under the image and is covered once the image loads: no JavaScript, no inline styles.
+ */
+@layer ansel {
+  .ansel {
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+  .ansel picture {
+    display: contents;
+  }
+  .ansel img {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    position: relative;
+  }
+  .ansel .ansel-placeholder {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+  .ansel[data-placeholder="blur"] .ansel-placeholder {
+    filter: blur(1.5rem);
+    scale: 1.15;
+  }
+  .ansel[data-placeholder="pixelated"] .ansel-placeholder {
+    image-rendering: pixelated;
+  }
+}

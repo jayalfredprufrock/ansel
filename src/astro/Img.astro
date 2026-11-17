@@ -1,0 +1,30 @@
+---
+import type { ImageName } from "@jayalfredprufrock/ansel";
+import { imgMarkup, type ImgOptions } from "@jayalfredprufrock/ansel/render";
+import { images } from "virtual:ansel";
+import "@jayalfredprufrock/ansel/styles.css";
+
+interface Props extends ImgOptions {
+  /** An image listed in `images.ts`. */
+  name: ImageName;
+  /** Class for the wrapper element (the box the image fills). */
+  class?: string | undefined;
+}
+
+const { name, class: className, ...options } = Astro.props;
+const image = images[name];
+if (!image) throw new Error(`<Img>: no image "${name}" in images.ts`);
+const { placeholder, placeholderSrc, sources, img } = imgMarkup(image, options);
+---
+
+<span class:list={["ansel", className]} data-placeholder={placeholder}>
+  {placeholderSrc && (
+    <img class="ansel-placeholder" src={placeholderSrc} alt="" aria-hidden="true" />
+  )}
+  <picture>
+    {sources.map((source) => (
+      <source {...source} />
+    ))}
+    <img {...img} />
+  </picture>
+</span>

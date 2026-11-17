@@ -1,0 +1,16 @@
+packages:
+  - examples/*
+
+# vite-plus needs `vite` at the root to resolve to its own core. The examples use real Vite
+# (see their tsconfig `paths`).
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@1.6.0
+  vite-plus: 1.6.0
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+
+peerDependencyRules:
+  allowAny:
+    - vite

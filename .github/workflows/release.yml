@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write # npm trusted publishing (OIDC) and provenance
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Release when any commit subject in this push contains [release], or on manual dispatch.
+      - name: Check for [release]
+        id: trigger
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            git log -1 --format=%s | grep -qF '[release]' && echo "release=true" >> "$GITHUB_OUTPUT" || true
+          else
+            git log --format=%s "$BEFORE..$GITHUB_SHA" | grep -qF '[release]' && echo "release=true" >> "$GITHUB_OUTPUT" || true
+          fi
+
+      - uses: voidzero-dev/setup-vp@v1.21.2
+        if: steps.trigger.outputs.release == 'true'
+        with:
+          node-version-file: ".node-version"
+          cache: true
+
+      - if: steps.trigger.outputs.release == 'true'
+        run: vp run ci
+
+      # Sets the version, publishes to npm, tags, writes release notes.
+      # Publishing uses npm trusted publishing (OIDC). Until that is configured on npmjs.com, a
+      # temporary NPM_TOKEN repository secret is used instead; delete the secret once OIDC works.
+      - name: Release
+        if: steps.trigger.outputs.release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Single quotes: the file holds the variable reference, not the token.
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> ~/.npmrc
+          fi
+          vp exec semantic-release

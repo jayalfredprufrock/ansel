@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "images": {
+    "office/waiting-room": {
+      "file": "office/waiting-room.png",
+      "content": "5385e8c32e78",
+      "width": 1600,
+      "height": 1600,
+      "bytes": 38484,
+      "focal": [50, 50],
+      "preview": "data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACQAQCdASoQABAAAsBMJaACdLoAA5gA/uns/8OVPp29j4iEYciIAA==",
+      "color": "#3868a8",
+      "alpha": false,
+      "gps": false,
+      "embedded": {}
+    },
+    "team/dr-patel": {
+      "file": "team/dr-patel.jpg",
+      "content": "5c49a674ae18",
+      "width": 2400,
+      "height": 1600,
+      "bytes": 24068,
+      "focal": [75, 19],
+      "preview": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAABwAQCdASoQAAsAAsBMJagCdAAtIAB9pIQ7S0cszhXsv/wHzrtKp7lY5u/8SxoAAAA=",
+      "color": "#48a868",
+      "alpha": false,
+      "gps": true,
+      "embedded": {}
+    }
+  }
+}

@@ -1,0 +1,23 @@
+---
+import Img from "@jayalfredprufrock/ansel/Img.astro";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ansel: Astro example</title>
+  </head>
+  <body>
+    <h1>ansel: Astro example</h1>
+    <Img name="team/dr-patel" priority />
+    <Img name="team/dr-patel" ratio="1:1" sizes="20rem" placeholder="pixelated" class="square" />
+    <Img name="office/waiting-room" ratio="16:9" placeholder="color" />
+  </body>
+</html>
+
+<style>
+  .square {
+    max-inline-size: 20rem;
+  }
+</style>

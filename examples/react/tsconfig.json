@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    // Resolve the package's `vite` types to this app's Vite, as they would for a real user.
+    "paths": { "vite": ["./node_modules/vite/dist/node/index.d.ts"] }
+  },
+  "include": ["src", "vite.config.ts"]
+}
