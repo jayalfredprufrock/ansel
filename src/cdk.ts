@@ -134,6 +134,10 @@ export class ImageOptimizer extends Construct {
         ANSEL_PREFIX: prefix,
         ANSEL_MAX_BYTES: String(props.maxOriginalBytes ?? 25 * 1024 * 1024),
         ANSEL_MAX_PIXELS: String(props.maxPixels ?? 50_000_000),
+        // Without it, sharp on glibc Linux (Lambda) uses one thread, to limit memory
+        // fragmentation; with it, every core (AVIF encoding scales almost linearly). Each
+        // invocation encodes one image, so two arenas are plenty.
+        MALLOC_ARENA_MAX: "2",
       },
     });
     props.bucket.grantRead(this.function, `${prefix}*`);
