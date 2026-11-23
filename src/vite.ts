@@ -345,3 +345,4 @@ const readText = (path: string) => readFile(path, "utf8").catch(() => undefined)
 
 const formatBytes = (bytes: number) =>
   bytes >= 1_000_000 ? `${(bytes / 1_000_000).toFixed(1)} MB` : `${Math.round(bytes / 1000)} kB`;
+export { listOriginals, type Original } from "./originals.ts";

@@ -12,7 +12,9 @@
 - `src/render.ts`: the markup `<Img>` renders, shared by `src/astro/Img.astro` (shipped as source) and `src/react.tsx`. `src/styles.css`: placeholder styles in `@layer ansel`.
 - `src/client.d.ts`: types for `?ansel` and `virtual:ansel`, referenced by the generated `types.d.ts`.
 - `examples/astro`, `examples/react`: small apps that use the package from source; CI builds both.
-- Planned: `src/cdk.ts` (`/cdk` export, the optimizer construct; `aws-cdk-lib` and `constructs` as optional peers).
+- `src/optimizer.ts`: the optimizer Lambda handler (path parsing, original lookup with focal metadata, `transformImage`). Not exported: `vp pack` also builds it alone into `dist/optimizer/index.mjs` (sharp and the AWS SDK external).
+- `src/cdk.ts` (`/cdk`): `ImageOptimizer`, which packages that file with sharp installed for linux-arm64 (npm, no Docker). `aws-cdk-lib` and `constructs` are optional peers.
+- `src/originals.ts`: `listOriginals()` (exported from `/vite`), the originals an upload script sends to the optimizer's bucket.
 
 ## Commands
 

@@ -2,7 +2,7 @@
 
 Responsive images for Vite, Astro and React, built around an image optimizer you host yourself.
 
-> **Status:** pre-1.0. The Vite plugin and `<Img>` for Astro and React work. The optimizer (an AWS CDK construct) is not built yet: the dev server serves images locally, but production builds produce `/_img/…` URLs that nothing serves until it ships. Minor versions may include breaking changes until 1.0.
+> **Status:** pre-1.0. The Vite plugin, `<Img>` for Astro and React, and the optimizer (an AWS CDK construct) work. Minor versions may include breaking changes until 1.0.
 
 ## What it does
 
@@ -99,16 +99,34 @@ Images load lazily unless `priority` is set. Styles live in `@layer ansel`, so y
 
 Problems are warnings in dev and fail the build.
 
+## Production: the optimizer
+
+`ImageOptimizer` (`@jayalfredprufrock/ansel/cdk`) deploys a Lambda that serves `/_img/…` with the same output as the dev server. Put it behind CloudFront with origin access control, and upload each image's original to the bucket first.
+
+```ts
+import { ImageOptimizer } from "@jayalfredprufrock/ansel/cdk";
+
+const optimizer = new ImageOptimizer(this, "Images", { bucket, prefix: "images/" });
+// CloudFront: a `/_img/*` behavior with
+// origins.FunctionUrlOrigin.withOriginAccessControl(optimizer.url), caching on the path only.
+```
+
+- **Originals** live at `<prefix>[<scope>/…]<hash>/<slug>`, with the focal point as `focal` object metadata (`"x,y"`). `listOriginals(root)` from `@jayalfredprufrock/ansel/vite` lists them (hash, slug, file, focal) for an upload script. Optional scope folders, such as a site ID a CloudFront function inserts after `/_img/`, keep several sites apart in one bucket.
+- Anything that doesn't parse, or has no original, is a 404, so URLs can't be invented. Responses are cached for a year (`immutable`).
+- **Limits:** 2 GB memory, 15 s timeout, 20 reserved concurrent executions (the ceiling on encode costs), originals up to 25 MB and 50 megapixels; all configurable.
+- **Packaging** needs no Docker: at synth time the handler is copied and sharp is installed for linux-arm64 with npm (needs network). `aws-cdk-lib` and `constructs` are optional peer dependencies.
+
 ## Exports
 
 | Import                                | What it is                                 |
 | ------------------------------------- | ------------------------------------------ |
 | `@jayalfredprufrock/ansel`            | `defineImages` and types                   |
-| `@jayalfredprufrock/ansel/vite`       | Vite plugin                                |
+| `@jayalfredprufrock/ansel/vite`       | Vite plugin, `listOriginals`               |
 | `@jayalfredprufrock/ansel/Img.astro`  | `<Img>` for Astro                          |
 | `@jayalfredprufrock/ansel/react`      | `<Img>` for React                          |
 | `@jayalfredprufrock/ansel/styles.css` | Styles (Astro's `<Img>` includes them)     |
 | `@jayalfredprufrock/ansel/url`        | URL format: building and parsing `/_img/…` |
+| `@jayalfredprufrock/ansel/cdk`        | `ImageOptimizer` construct (AWS CDK)       |
 
 ## Requirements
 

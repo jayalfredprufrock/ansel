@@ -19,9 +19,12 @@ export async function transformImage(
   original: Uint8Array,
   variant: Pick<ImageVariant, "width" | "ratio" | "quality" | "format">,
   focal: Focal,
+  /** Refuse originals with more pixels than this (sharp's default is 268 million). */
+  maxPixels?: number,
 ): Promise<Buffer> {
-  const image = sharp(original).autoOrient();
-  const { autoOrient } = await sharp(original).metadata();
+  const options = maxPixels ? { limitInputPixels: maxPixels } : {};
+  const image = sharp(original, options).autoOrient();
+  const { autoOrient } = await sharp(original, options).metadata();
   const size = outputSize(variant, autoOrient);
   if (variant.ratio) image.extract(cropRegion(autoOrient, variant.ratio, focal));
   image.resize(size.width, size.height, { fit: "fill" });
